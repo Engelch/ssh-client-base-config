@@ -1,0 +1,30 @@
+# ssh-config
+# Version 2.0.0
+
+# SHA1-based ones excluded
+#   diffie-hellman-group-exchange-sha1,diffie-hellman-group1-sha1
+Ciphers aes256-cbc,aes256-ctr,aes256-gcm@openssh.com
+
+# submodule config configuration
+Include */Config.d/*.config
+Include Config*.d/*.config
+
+Host *
+    AddKeysToAgent yes
+    Compression yes
+    ConnectTimeout 300
+    ConnectionAttempts 10
+    ControlMaster auto
+#    ControlPath ~/.ssh/ssh-controlmaster-%r@%h:%p
+    ControlPersist 900
+    ForwardAgent yes
+    IgnoreUnknown UseKeychain
+    PubkeyAcceptedKeyTypes +ssh-rsa
+    ServerAliveCountMax 60
+    ServerAliveInterval 2
+    StrictHostKeyChecking no
+    TCPKeepalive yes
+    UseKeychain yes
+    UserKnownHostsFile /dev/null
+
+# EOF
