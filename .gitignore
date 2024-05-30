@@ -1,4 +1,6 @@
 *.gee.pw
+/id_dsa
+/id_dsa.pub
 /id_rsa
 /id_rsa.pub
 /id_rsa-cert.pub
@@ -7,12 +9,7 @@
 /completion.lst
 /Keys.*.d
 /Config.*.d
-/add
 /aws
 /authorized_keys
-/cias-ssh-config.md
 /dot.gitconfig
-/install-ssh.sh
-/10-create_ssh_config.sh
-/Old
 /Other.*.d
