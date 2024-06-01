@@ -54,10 +54,10 @@ function setupDefaultId() {
     if [ "$numCfgs" -eq 1 ] ; then
         echo ok setup id_rsa configuration as only one found
         cfg="$(find -L . -depth 2 | grep '^\./Keys\..*.d' | grep '/id_rsa$')"
-        ln -fsv "$cfg" "$1"
+        ln -fs "$cfg" "$1"
     else
         select cfg in $(find -L . -depth 2 | grep '^\./Keys\..*.d' | grep '/id_rsa$') ; do
-            ln -sfv "$cfg" .
+            ln -sf "$cfg" .
             echo ok "$cfg chosen"
             break
         done
@@ -73,7 +73,11 @@ function setupDefaultId() {
 function setupCompletion() {
     if [ -e completion.lst ] ; then
         echo ok completion.lst found.
-        read -e -N 1 -p 'Do you want to replace completion.lst [Yn]?' -i y answer
+        if [ "$autoYes" != '' ] ; then
+            answer=y
+        else
+            read -e -N 1 -p 'Do you want to replace completion.lst [Yn]?' -i y answer
+        fi
         if [[ "$answer" =~ [yY] ]] ; then
             echo ok replacing existing completion.lst file
             /bin/rm -f completion.lst
@@ -88,36 +92,44 @@ function setupCompletion() {
     echo "ok number of hosts in completion file completion.lst: $(wc -l completion.lst | awk '{print $1}')"
 }
 
-# setupAwsGnupgGitConfig
-# EXIT 30, 31, 32
-function setupAwsGnupgGitConfig() {
-    [ "$1" != gnupg ] && [ "$1" != aws ] && [ "$1" != gitconfig ] && errorExit 30 "setupAwsGnupgGitConfig called with 1st argument not supported, being $1"
-    # check how many configuration exist by s-linked ssh-modules
+# EXIT 30
+function setupHomeDir() {
+    cd
+    if [ -L ."$1" ] ; then # test -e does not match for an s-link pointing to the void
+        echo "ok s-link detected .$1"
+        /bin/mv -f ".$1" ".$1.org" || {
+            echo "ok .$1 cannot be moved, deleting it"
+            /bin/rm -f ".$1"
+        }
+    elif [ -e ".$1" ] ; then # if .$1 is not an s-link
+        echo "not ok .$1 is not an s-link"
+        [ -L ".$1.org" ] && /bin/rm -f ".$1.org"
+        /bin/mv -f ".$1" ".$1.org" || errorExit 30 "cannot move .$1"
+        echo "ok fixed .$1 by moving it to .$1.org"
+    fi
+    ln -s ".ssh/$1" ".$1"
+    cd - > /dev/null
+}
+
+# setupOtherFile authorize_keys | known_hosts
+# EXIT 50
+function setupOtherFile() {
     local numCfgs="$(find -L . -depth 2 | grep '^\./Other\.' | grep "/$1$" | wc -l)"
-    [ "$numCfgs" -eq 0 ] && echo "ok no $1 configurations detected" && return 0 # no cfg, return
-    echo "ok number of $1 configurations found in Other.*.d: $numCfgs"
-    [ -e "$1" ] && { echo ok detected existing ~/.ssh/$1, deleting ; /bin/rm -f "$1" ; } # delete an already existing configuration setup ~/.ssh/"$1"
+    [ "$numCfgs" -eq 0 ] && echo "ok no $1 files detected" && return 0 # no cfg, return
+
+    echo "ok number of $1 files found in Other.*.d: $numCfgs"
+    [ -L "$1" ] && { echo ok detected existing ~/.ssh/$1, deleting ; /bin/rm -f "$1" ; }
     if [ "$numCfgs" -eq 1 ] ; then
         echo "ok setup $1 configuration as only one found"
         cfg="$(find -L . -depth 2 | grep '^\./Other\.' | grep "/$1$")"
-        ln -sv "$cfg" "$1" || errorExit 31 "creating s-link like ln -s $cfg $1"
+        ln -s "$cfg" "$1" || errorExit 50 "creating s-link like ln -s $cfg $1"
     else
         select cfg in $(find -L . -depth 2 | grep '^\./Other\.' | grep "/$1$") ; do
-            ln -sv "$cfg" "$1" || errorExit 31 "creating s-link like ln -s $cfg $1"
+            ln -s "$cfg" "$1" || errorExit 50 "creating s-link like ln -s $cfg $1"
             echo "ok $cfg chosen, configured"
             break
         done
     fi
-    # fix ~/."$1" by always resetting it and moving existing configuration to ."$1".org
-    cd
-    [ -L ."$1" ] && { echo ok s-link detected .$1 ; /bin/mv -f ".$1" ".$1.org" || { echo "ok deleting, cannot be moved .$1" ; /bin/rm -f ".$1" ; } ;  }  # existing ~/."$1" found, if same as ."$1".org, delete it
-    [ -e ".$1" ] && { echo "not ok .$1 is not an s-link"
-        [ -L ".$1.org" ] && /bin/rm -f ".$1.org"
-        /bin/mv -f ".$1" ".$1.org" || errorExit 32 "cannot move .$1"
-        echo "ok fixed .$1 by moving it to .$1.org"
-    }
-    ln -sv ".ssh/$1" ".$1"
-    cd - > /dev/null
 }
 
 # execution in parallel in not expected
@@ -127,16 +139,31 @@ function setupAwsGnupgGitConfig() {
 # EXIT 1 + sub-exits
 function main() {
     set -u
+    global autoYes=''
+    case "${1:-}" in
+    -V|--version|version)
+        echo '1.1.0' 1>&2
+        exit 0
+        ;;
+    -y)
+        autoYes=TRUE    # create completion.lst again, do not ask
+        ;;
+    esac
 
     exitIfBinariesNotFound sed          # EXIT 253
-    testInstallSshLocation              # check if install-ssh.sh is from ~/.ssh. Otherwise, EXIT 10 11 12
+    testInstallSshLocation              # EXIT 10 11 12
     cd ~/.ssh || errorExit 1 "cannot change directory to ~/.ssh"
-    checkRequirements                   # check if ssh-...-config inter-dependencies are met. Else, EXIT 20 21
+    checkRequirements                   # EXIT 20 21
 
     setupDefaultId                      # NO EXIT
-    setupAwsGnupgGitConfig aws          # EXIT 30, 31, 32
-    setupAwsGnupgGitConfig gnupg        # EXIT 30, 31, 32
-    setupAwsGnupgGitConfig gitconfig    # EXIT 30, 31, 32
+    setupOtherFile aws                  # EXIT 50
+    setupHomeDir   aws                  # EXIT 30
+    setupOtherFile gnupg                # EXIT 50
+    setupHomeDir   gnupg                # EXIT 30
+    setupOtherFile gitconfig            # EXIT 50
+    setupHomeDir   gitconfig            # EXIT 30
+    setupOtherFile authorized_keys      # EXIT 50
+    setupOtherFile known_hosts          # EXIT 50
     setupCompletion                     # EXIT 40
 }
 
