@@ -49,7 +49,7 @@ function checkRequirements() {
 function setupDefaultId() {
     local numCfgs="$(find -L . -depth 2 | grep '^\./Keys\..*.d' | grep '/id_rsa$' | wc -l)"
     local cfg=''
-    [ "$numCfgs" -eq 0 ] && echo "ok no $1 configurations" && return 0
+    [ "$numCfgs" -eq 0 ] && echo "ok no ${1:-} configurations" && return 0
     echo ok "default id configurations found in Keys.\*.d: $numCfgs"
     if [ "$numCfgs" -eq 1 ] ; then
         echo ok setup id_rsa configuration as only one found
@@ -139,7 +139,7 @@ function setupOtherFile() {
 # EXIT 1 + sub-exits
 function main() {
     set -u
-    global autoYes=''
+    declare -g autoYes=''
     case "${1:-}" in
     -V|--version|version)
         echo '1.1.0' 1>&2
