@@ -72,14 +72,15 @@ lrwxr-xr-x known_hosts -> ./Other.companyA-engelch.d/known_hosts
 
 ## Installation Steps
 
-1. Clone all repositories
-2. Optionally decrypt repositories ([git gee](https://github.com/engelch/ConfigShell) is your friend)
-3. Clean up existing parts as `~/.ssh`
-4. S-link ssh-base-config as `~/.ssh`
-5. Go to `~/.ssh`
-6. For each other `ssh-...-config` repository:
+1. Install ConfigShell first
+2. Clone all repositories
+3. Optionally decrypt repositories ([git gee](https://github.com/engelch/ConfigShell) is your friend)
+4. Clean up existing parts as `~/.ssh`
+5. S-link ssh-base-config as `~/.ssh`
+6. Go to `~/.ssh`
+7. For each other `ssh-...-config` repository:
    1. `ln -s <<repositoryPath>>/* .`
-7. `./install-ssh.sh`
+8. `./install-ssh.sh`
 
 ## install.ssh
 
