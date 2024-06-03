@@ -1,21 +1,22 @@
-# ssh-base-config
+# ssh-client-base-config
 
-This is ssh-base-config. This repository is intended to be used by many users. It does not contain any encrypted files.
+This is ssh-client-base-config. This repository is intended to be used by many users. It does not contain any encrypted files.
 
 ## Concept
 
 A typical SSH setup consists of at least 3 repositories. The 4th repository contains keys and other material for the user when working for a company. This approach also supports multiple companies.
 
-1. `ssh-base-config`
+1. `ssh-client-base-config`
 2. `ssh-<<user>>-config`
 3. `ssh-<<company>>-config`
 4. `ssh-<<user>>-<<company>>-config`
 
-It is best to download these repositories first. While the ssh-base configuration is being set up, downloads, i.e. cloning, may fail due to SSH keys not being found.
+It is best to download these repositories first. While the ssh-client-base configuration is being set up, downloads, i.e. cloning, may fail due to SSH keys not being found.
 
 The user should download this repository into a private area such as `~/p/`. Then the user should create a symbolic link (s-link) to `~/.ssh`.
 
-All SSH repositories have the same structure; all elements are optional.
+All SSH repositories have the same structure; all elements are optional. No other files
+should be in the repositories; move everything else to the Other.xxx.d directory.
 
 1. `Keys.<<user>>[--<<company>>]].d`
 2. `Config.<<user>>[--<<company>>]].d`
@@ -37,7 +38,7 @@ To fix the name, a further symbolic link is introduced to link
 
 ### Example
 
-Here is the default ssh-base-config directory shared by all:
+Here is the default ssh-client-base-config directory shared by all:
 
 ```bash
 # s-linked files (all) from ~/companyA/ssh-companyA-config/ (usually maintained by companyA)
@@ -56,18 +57,23 @@ lrwxr-xr-x Config.engelch.d -> /Users/engelch/p/ssh-engelch-config/Config.engelc
 lrwxr-xr-x Keys.engelch.d -> /Users/engelch/p/ssh-engelch-config/Keys.engelch.d/
 lrwxr-xr-x Other.engelch.d -> /Users/engelch/p/ssh-engelch-config/Other.engelch.d/
 
-# files created by install-ssh
+# files created by install-ssh.sh
 lrwxr-xr-x aws -> ./Other.companyA-engelch.d/aws/
 lrwxr-xr-x gnupg -> ./Other.engelch.d/gnupg/
 lrwxr-xr-x authorized_keys -> ./Other.companyA-engelch.d/authorized_keys
 -rw-r--r-- completion.lst
--rw-r--r-- config
 lrwxr-xr-x gitconfig -> ./Other.engelch.d/gitconfig
 lrwxr-xr-x known_hosts -> ./Other.companyA-engelch.d/known_hosts
 
-# The only files in ssh-base-config.
+# files created under ~ by install-ssh.sh
+.aws -> ./ssh/aws
+.gnupg -> .ssh/gnupg
+.gitconfig -> .ssh/gitconfig
+
+# The only files in ssh-client-base-config.
 -rwxr-xr-x install-ssh.sh*
 -rw-r--r-- README.md
+-rw-r--r-- config
 ```
 
 ## Installation Steps
@@ -75,8 +81,8 @@ lrwxr-xr-x known_hosts -> ./Other.companyA-engelch.d/known_hosts
 1. Install ConfigShell first
 2. Clone all repositories
 3. Optionally decrypt repositories ([git gee](https://github.com/engelch/ConfigShell) is your friend)
-4. Clean up existing parts as `~/.ssh`
-5. S-link ssh-base-config as `~/.ssh`
+4. Clean up existing parts as `~/.ssh`. You should not have a ~/.ssh anymore.
+5. S-link ssh-client-base-config as `~/.ssh`. Now ~/.ssh points to ssh-client-base-config.
 6. Go to `~/.ssh`
 7. For each other `ssh-...-config` repository:
    1. `ln -s <<repositoryPath>>/* .`
