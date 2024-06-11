@@ -47,16 +47,16 @@ function checkRequirements() {
 # setupDefaultId
 # NO EXIT
 function setupDefaultId() {
-    local numCfgs="$(find -L . -depth 2 | grep '^\./Keys\..*.d' | grep '/id_rsa$' | wc -l)"
+    local numCfgs="$(find -L . -maxdepth 2 | grep '^\./Keys\..*.d' | grep '/id_rsa$' | wc -l)"
     local cfg=''
     [ "$numCfgs" -eq 0 ] && echo "ok no ${1:-} configurations" && return 0
     echo ok "default id configurations found in Keys.\*.d: $numCfgs"
     if [ "$numCfgs" -eq 1 ] ; then
         echo ok setup id_rsa configuration as only one found
-        cfg="$(find -L . -depth 2 | grep '^\./Keys\..*.d' | grep '/id_rsa$')"
+        cfg="$(find -L . -maxdepth 2 | grep '^\./Keys\..*.d' | grep '/id_rsa$')"
         ln -fs "$cfg" "$1"
     else
-        select cfg in $(find -L . -depth 2 | grep '^\./Keys\..*.d' | grep '/id_rsa$') ; do
+        select cfg in $(find -L . -maxdepth 2 | grep '^\./Keys\..*.d' | grep '/id_rsa$') ; do
             ln -sf "$cfg" .
             echo ok "$cfg chosen"
             break
@@ -76,7 +76,7 @@ function setupCompletion() {
         if [ "$autoYes" != '' ] ; then
             answer=y
         else
-            read -e -N 1 -p 'Do you want to replace completion.lst [Yn]?' -i y answer
+            read -e -N 1 -p 'ok - Do you want to replace completion.lst [Yn]?' -i y answer
         fi
         if [[ "$answer" =~ [yY] ]] ; then
             echo ok replacing existing completion.lst file
@@ -114,17 +114,17 @@ function setupHomeDir() {
 # setupOtherFile authorize_keys | known_hosts
 # EXIT 50
 function setupOtherFile() {
-    local numCfgs="$(find -L . -depth 2 | grep '^\./Other\.' | grep "/$1$" | wc -l)"
+    local numCfgs="$(find -L . -maxdepth 2 | grep '^\./Other\.' | grep "/$1$" | wc -l)"
     [ "$numCfgs" -eq 0 ] && echo "ok no $1 files detected" && return 0 # no cfg, return
 
     echo "ok number of $1 files found in Other.*.d: $numCfgs"
     [ -L "$1" ] && { echo ok detected existing ~/.ssh/$1, deleting ; /bin/rm -f "$1" ; }
     if [ "$numCfgs" -eq 1 ] ; then
         echo "ok setup $1 configuration as only one found"
-        cfg="$(find -L . -depth 2 | grep '^\./Other\.' | grep "/$1$")"
+        cfg="$(find -L . -maxdepth 2 | grep '^\./Other\.' | grep "/$1$")"
         ln -s "$cfg" "$1" || errorExit 50 "creating s-link like ln -s $cfg $1"
     else
-        select cfg in $(find -L . -depth 2 | grep '^\./Other\.' | grep "/$1$") ; do
+        select cfg in $(find -L . -maxdepth 2 | grep '^\./Other\.' | grep "/$1$") ; do
             ln -s "$cfg" "$1" || errorExit 50 "creating s-link like ln -s $cfg $1"
             echo "ok $cfg chosen, configured"
             break
